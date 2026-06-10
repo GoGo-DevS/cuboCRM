@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ lead.nombre }} · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}{{ lead.nombre }}{% endblock %}
+{% block breadcrumb %}<span class="badge {{ lead.color_estado }}">{{ lead.get_estado_display }}</span>{% endblock %}
+{% block actions %}
+  <a href="{% url 'leads:board' %}" class="btn btn-ghost">{% include 'core/_icon.html' with name='arrow-left' %} Volver</a>
+  <a href="{% url 'leads:update' lead.pk %}" class="btn">{% include 'core/_icon.html' with name='edit' %} Editar</a>
+  {% if lead.whatsapp %}<a href="https://wa.me/{{ lead.whatsapp|cut:' '|cut:'+' }}" target="_blank" class="btn btn-dark">{% include 'core/_icon.html' with name='whatsapp' %} WhatsApp</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+  <div class="card card-pad">
+    <div class="section-title">Información de contacto</div>
+    <dl class="dl">
+      <dt>Empresa</dt><dd>{{ lead.empresa|default:"—" }}</dd>
+      <dt>Cargo</dt><dd>{{ lead.cargo|default:"—" }}</dd>
+      <dt>Email</dt><dd>{{ lead.email|default:"—" }}</dd>
+      <dt>WhatsApp</dt><dd>{{ lead.whatsapp|default:"—" }}</dd>
+      <dt>Instagram</dt><dd>{{ lead.instagram|default:"—" }}</dd>
+      <dt>LinkedIn</dt><dd>{{ lead.linkedin|default:"—" }}</dd>
+      <dt>Behance</dt><dd>{{ lead.behance|default:"—" }}</dd>
+      <dt>Sitio web</dt><dd>{{ lead.sitio_web|default:"—" }}</dd>
+      <dt>Fuente</dt><dd><span class="badge secondary">{{ lead.get_fuente_display }}</span></dd>
+      <dt>Valor estimado</dt><dd>${{ lead.valor_estimado|intcomma }}</dd>
+    </dl>
+    {% if lead.notas %}
+      <div class="section-title" style="margin-top:18px">Notas</div>
+      <p style="white-space:pre-wrap">{{ lead.notas }}</p>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="card card-pad">
+      <div class="section-title">Mover en pipeline</div>
+      <form method="post" action="{% url 'leads:set_estado' lead.pk %}">
+        {% csrf_token %}
+        <select name="estado" class="form-select" onchange="this.form.submit()">
+          {% for val, lab in lead.Estado.choices %}
+            <option value="{{ val }}" {% if val == lead.estado %}selected{% endif %}>{{ lab }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    <div class="card card-pad mt-3">
+      <div class="section-title">Convertir</div>
+      {% if lead.cliente %}
+        <p class="muted mb-0">Vinculado a <a href="{{ lead.cliente.get_absolute_url }}" class="strong">{{ lead.cliente.nombre }}</a></p>
+      {% else %}
+        <p class="muted" style="font-size:13px">Gana el lead y créalo como cliente para iniciar proyectos.</p>
+        <form method="post" action="{% url 'leads:convert' lead.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-primary" style="width:100%;justify-content:center">{% include 'core/_icon.html' with name='check' %} Ganar y crear cliente</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <div class="card card-pad mt-3">
+      <form method="post" action="{% url 'leads:delete' lead.pk %}" onsubmit="return confirm('¿Eliminar este lead?')">
+        {% csrf_token %}
+        <button class="btn btn-danger btn-sm" style="width:100%;justify-content:center">Eliminar lead</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

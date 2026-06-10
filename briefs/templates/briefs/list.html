@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Briefs · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}Briefs creativos{% endblock %}
+{% block actions %}<a href="{% url 'briefs:create' %}" class="btn btn-primary">{% include 'core/_icon.html' with name='plus' %} Nuevo brief</a>{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th>Marca</th><th>Cliente</th><th>Rubro</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for b in briefs %}
+      <tr>
+        <td><a href="{{ b.get_absolute_url }}" class="strong">{{ b.nombre_marca }}</a></td>
+        <td>{{ b.cliente.nombre }}</td>
+        <td class="muted">{{ b.rubro|default:"—" }}</td>
+        <td><span class="badge {{ b.color_estado }}">{{ b.get_estado_display }}</span></td>
+        <td class="right"><a href="{% url 'briefs:update' b.pk %}" class="btn btn-sm btn-ghost">Editar</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5"><div class="empty">{% include 'core/_icon.html' with name='doc' %}<div>Sin briefs. Crea el primero para capturar el encargo creativo.</div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

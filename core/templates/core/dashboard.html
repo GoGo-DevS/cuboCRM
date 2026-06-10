@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Dashboard · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Visión general del estudio{% endblock %}
+{% block actions %}
+  <a href="{% url 'leads:create' %}" class="btn btn-primary">{% include 'core/_icon.html' with name='plus' %} Nuevo lead</a>
+{% endblock %}
+
+{% block content %}
+<div class="kpis">
+  <div class="kpi">
+    <div class="label"><span class="dot" style="background:#9aa0a6"></span> Leads nuevos</div>
+    <div class="value">{{ leads_nuevos }}</div>
+    <div class="foot">{{ leads_activos }} en pipeline activo</div>
+  </div>
+  <div class="kpi">
+    <div class="label"><span class="dot" style="background:#5b46c4"></span> Cotizaciones</div>
+    <div class="value">{{ cotizaciones_pendientes }}</div>
+    <div class="foot">en negociación / enviadas</div>
+  </div>
+  <div class="kpi">
+    <div class="label"><span class="dot" style="background:#1d6fa5"></span> Proyectos activos</div>
+    <div class="value">{{ proyectos_activos }}</div>
+    <div class="foot">{{ proyectos_entregados }} entregados</div>
+  </div>
+  <div class="kpi accent">
+    <div class="label"><span class="dot" style="background:var(--lime)"></span> Conversión</div>
+    <div class="value">{{ conversion }}%</div>
+    <div class="foot">{{ ganados }} negocios ganados</div>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi">
+    <div class="label">Ingresos del mes</div>
+    <div class="value" style="font-size:22px">${{ pagos_mes|intcomma }}</div>
+    <div class="foot">Año: ${{ pagos_ano|intcomma }}</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Por cobrar</div>
+    <div class="value" style="font-size:22px">${{ por_cobrar|intcomma }}</div>
+    <div class="foot">saldo de proyectos</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Clientes</div>
+    <div class="value" style="font-size:22px">{{ total_clientes }}</div>
+    <div class="foot">{{ recurrentes }} recurrentes</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Briefs abiertos</div>
+    <div class="value" style="font-size:22px">{{ briefs_pendientes }}</div>
+    <div class="foot">por aprobar</div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card card-pad">
+    <div class="flex-between" style="margin-bottom:14px">
+      <h3 class="mb-0">Pipeline comercial</h3>
+      <a href="{% url 'leads:board' %}" class="btn btn-sm btn-ghost">Ver Kanban →</a>
+    </div>
+    <div class="bars">
+      {% for row in leads_por_estado %}
+      <div class="bar-row">
+        <span class="muted">{{ row.label }}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:{% widthratio row.value max_leads 100 %}%"></span></span>
+        <span class="right">{{ row.value }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Próximas entregas</h3>
+    {% for p in proximas_entregas %}
+      <div class="flex-between" style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <a href="{{ p.get_absolute_url }}" class="strong">{{ p.nombre }}</a>
+          <div class="muted" style="font-size:12px">{{ p.cliente.nombre }}</div>
+        </div>
+        <span class="badge {{ p.color_estado }}">{{ p.fecha_entrega|date:"d M" }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">Sin entregas programadas.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid grid-2 mt-3">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:12px">Últimos leads</h3>
+    <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Contacto</th><th>Fuente</th><th>Estado</th><th class="right">Valor</th></tr></thead>
+      <tbody>
+        {% for l in ultimos_leads %}
+        <tr>
+          <td><a href="{{ l.get_absolute_url }}" class="strong">{{ l.nombre }}</a><div class="muted" style="font-size:12px">{{ l.empresa }}</div></td>
+          <td><span class="badge secondary">{{ l.get_fuente_display }}</span></td>
+          <td><span class="badge {{ l.color_estado }}">{{ l.get_estado_display }}</span></td>
+          <td class="right">${{ l.valor_estimado|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="muted">Aún no hay leads.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:12px">Proyectos por servicio</h3>
+    {% for row in proyectos_por_tipo %}
+      <div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <span>{{ row.label }}</span>
+        <span class="badge dark">{{ row.value }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">Sin proyectos todavía.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

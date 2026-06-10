@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block actions %}<a href="{% url 'briefs:list' %}" class="btn btn-ghost">{% include 'core/_icon.html' with name='arrow-left' %} Volver</a>{% endblock %}
+{% block content %}
+<div class="card card-pad" style="max-width:960px">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include 'core/_form_fields.html' with form=form %}
+    <div class="flex mt-3">
+      <button type="submit" class="btn btn-primary">{% include 'core/_icon.html' with name='check' %} Guardar brief</button>
+      <a href="{% if brief %}{{ brief.get_absolute_url }}{% else %}{% url 'briefs:list' %}{% endif %}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

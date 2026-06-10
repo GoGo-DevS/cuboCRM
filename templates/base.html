@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<div class="app">
+  {% with path=request.path %}
+  <aside class="sidebar" id="sidebar">
+    <a href="{% url 'dashboard' %}" class="brand">
+      <span class="mark">cb</span>
+      <span class="name">{{ BRAND_SHORT }}<small>{{ BRAND_TAGLINE }}</small></span>
+    </a>
+    <nav class="nav">
+      <a href="{% url 'dashboard' %}" class="{% if path == '/' %}active{% endif %}">
+        {% include 'core/_icon.html' with name='grid' %}<span>Dashboard</span>
+      </a>
+      <div class="section">Comercial</div>
+      <a href="{% url 'leads:board' %}" class="{% if '/leads' in path %}active{% endif %}">
+        {% include 'core/_icon.html' with name='target' %}<span>Leads</span>
+      </a>
+      <a href="{% url 'clients:list' %}" class="{% if '/clients' in path %}active{% endif %}">
+        {% include 'core/_icon.html' with name='users' %}<span>Clientes</span>
+      </a>
+      <a href="{% url 'briefs:list' %}" class="{% if '/briefs' in path %}active{% endif %}">
+        {% include 'core/_icon.html' with name='doc' %}<span>Briefs</span>
+      </a>
+      <div class="section">Producción</div>
+      <a href="{% url 'projects:board' %}" class="{% if '/projects' in path %}active{% endif %}">
+        {% include 'core/_icon.html' with name='layers' %}<span>Proyectos</span>
+      </a>
+      <a href="{% url 'finance:overview' %}" class="{% if '/finance' in path %}active{% endif %}">
+        {% include 'core/_icon.html' with name='dollar' %}<span>Finanzas</span>
+      </a>
+      <a href="{% url 'portfolio:list' %}" class="{% if '/portfolio' in path %}active{% endif %}">
+        {% include 'core/_icon.html' with name='star' %}<span>Portafolio</span>
+      </a>
+    </nav>
+    <div class="spacer"></div>
+    <a href="/admin/" class="nav" style="font-size:12.5px;color:#8a8d84;padding:8px 11px;">⚙ Django Admin</a>
+    <div class="user">
+      <span class="avatar">{{ user.username|first|upper|default:'U' }}</span>
+      <span>{{ user.get_username|default:'invitado' }}</span>
+      <a href="{% url 'logout' %}" title="Salir">Salir</a>
+    </div>
+  </aside>
+  {% endwith %}
+
+  <div class="content">
+    <header class="topbar">
+      <button class="burger" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        {% include 'core/_icon.html' with name='menu' %}
+      </button>
+      <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+      <span class="crumb">{% block breadcrumb %}{% endblock %}</span>
+      <div class="actions">{% block actions %}{% endblock %}</div>
+    </header>
+
+    {% if messages %}
+    <div class="toasts" id="toasts">
+      {% for m in messages %}
+        <div class="toast {{ m.tags }}">{{ m }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="page">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script>
+  // Auto-dismiss toasts
+  setTimeout(() => { const t = document.getElementById('toasts'); if (t) t.style.opacity = '0'; }, 4200);
+
+  function getCookie(name) {
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+  }
+
+  // Drag & drop kanban (genérico): columnas con [data-estado], cards con [data-id], endpoint en data-url
+  function initKanban(rootId, endpointTpl) {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+    let dragged = null;
+    root.querySelectorAll('.kcard[draggable=true]').forEach(card => {
+      card.addEventListener('dragstart', () => { dragged = card; card.classList.add('dragging'); });
+      card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragged = null; });
+    });
+    root.querySelectorAll('.kcol').forEach(col => {
+      col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('dragover'); });
+      col.addEventListener('dragleave', () => col.classList.remove('dragover'));
+      col.addEventListener('drop', e => {
+        e.preventDefault(); col.classList.remove('dragover');
+        if (!dragged) return;
+        const estado = col.dataset.estado;
+        const id = dragged.dataset.id;
+        col.querySelector('.kbody').appendChild(dragged);
+        const fd = new FormData(); fd.append('estado', estado);
+        fetch(endpointTpl.replace('0', id), {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' },
+          body: fd,
+        });
+      });
+    });
+  }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

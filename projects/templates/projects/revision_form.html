@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block actions %}<a href="{{ entregable.proyecto.get_absolute_url }}" class="btn btn-ghost">{% include 'core/_icon.html' with name='arrow-left' %} Volver</a>{% endblock %}
+{% block content %}
+<div class="card card-pad" style="max-width:720px">
+  <p class="muted">Entregable: <strong>{{ entregable.nombre }}</strong> · {{ entregable.proyecto.nombre }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {% include 'core/_form_fields.html' with form=form %}
+    <div class="flex mt-3">
+      <button type="submit" class="btn btn-primary">{% include 'core/_icon.html' with name='check' %} Registrar revisión</button>
+      <a href="{{ entregable.proyecto.get_absolute_url }}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+
+  {% if entregable.revisiones.all %}
+  <div class="section-title" style="margin-top:22px">Historial de versiones</div>
+  {% for r in entregable.revisiones.all %}
+    <div class="flex-between" style="padding:9px 0;border-bottom:1px solid var(--border)">
+      <div><span class="badge dark">{{ r.get_version_display }}</span> <span class="muted" style="font-size:12px">{{ r.creado|date:"d M Y H:i" }}</span><div style="font-size:13px">{{ r.comentarios }}</div></div>
+      <span class="badge {% if r.estado == 'aprobada' %}success{% elif r.estado == 'cambios' %}warning{% else %}info{% endif %}">{{ r.get_estado_display }}</span>
+    </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

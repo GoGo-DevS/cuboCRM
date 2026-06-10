@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}{{ caso.titulo }} · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}{{ caso.titulo }}{% endblock %}
+{% block breadcrumb %}<span class="badge {% if caso.publicado %}success{% else %}secondary{% endif %}">{% if caso.publicado %}publicado{% else %}borrador{% endif %}</span>{% endblock %}
+{% block actions %}
+  <a href="{% url 'portfolio:list' %}" class="btn btn-ghost">{% include 'core/_icon.html' with name='arrow-left' %} Volver</a>
+  <a href="{{ caso.proyecto.get_absolute_url }}" class="btn">Ver proyecto</a>
+  <a href="/admin/portfolio/casestudy/{{ caso.pk }}/change/" class="btn">{% include 'core/_icon.html' with name='edit' %} Editar</a>
+  <form method="post" action="{% url 'portfolio:toggle_publish' caso.slug %}" style="display:inline">{% csrf_token %}
+    <button class="btn btn-primary">{% if caso.publicado %}Despublicar{% else %}Publicar{% endif %}</button>
+  </form>
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+  <div class="card card-pad">
+    {% if caso.imagen_portada %}<img src="{{ caso.imagen_portada.url }}" style="width:100%;border-radius:12px;margin-bottom:16px">{% endif %}
+    <div class="section-title">Descripción</div>
+    <p style="white-space:pre-wrap">{{ caso.descripcion|default:"—" }}</p>
+    <div class="section-title mt-3">Resultados</div>
+    <p style="white-space:pre-wrap">{{ caso.resultados|default:"Completa los resultados para publicar." }}</p>
+  </div>
+  <div>
+    <div class="card card-pad">
+      <div class="section-title">Proyecto</div>
+      <dl class="dl">
+        <dt>Cliente</dt><dd>{{ caso.proyecto.cliente.nombre }}</dd>
+        <dt>Servicio</dt><dd>{{ caso.proyecto.get_tipo_display }}</dd>
+        <dt>Slug</dt><dd class="muted">{{ caso.slug }}</dd>
+      </dl>
+    </div>
+    {% if caso.testimonio %}
+    <div class="card card-pad mt-3">
+      <div class="section-title">Testimonio</div>
+      <p style="font-style:italic">“{{ caso.testimonio.texto }}”</p>
+      <p class="muted mb-0" style="font-size:13px">— {{ caso.testimonio.autor_nombre }}{% if caso.testimonio.autor_cargo %}, {{ caso.testimonio.autor_cargo }}{% endif %}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ brief.nombre_marca }} · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}Brief · {{ brief.nombre_marca }}{% endblock %}
+{% block breadcrumb %}<span class="badge {{ brief.color_estado }}">{{ brief.get_estado_display }}</span>{% endblock %}
+{% block actions %}
+  <a href="{% url 'briefs:list' %}" class="btn btn-ghost">{% include 'core/_icon.html' with name='arrow-left' %} Volver</a>
+  <a href="{% url 'briefs:update' brief.pk %}" class="btn">{% include 'core/_icon.html' with name='edit' %} Editar</a>
+  <a href="{% url 'projects:create' %}?cliente={{ brief.cliente.pk }}" class="btn btn-primary">+ Proyecto desde brief</a>
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+  <div class="card card-pad">
+    <div class="section-title">Encargo creativo</div>
+    <dl class="dl">
+      <dt>Cliente</dt><dd><a href="{{ brief.cliente.get_absolute_url }}" class="strong">{{ brief.cliente.nombre }}</a></dd>
+      <dt>Marca</dt><dd>{{ brief.nombre_marca }}</dd>
+      <dt>Rubro</dt><dd>{{ brief.rubro|default:"—" }}</dd>
+      <dt>Personalidad</dt><dd>{{ brief.personalidad|default:"—" }}</dd>
+      <dt>Colores ✓</dt><dd>{{ brief.colores_deseados|default:"—" }}</dd>
+      <dt>Colores ✗</dt><dd>{{ brief.colores_prohibidos|default:"—" }}</dd>
+      <dt>Tipografías</dt><dd>{{ brief.tipografias|default:"—" }}</dd>
+      {% if brief.adjunto %}<dt>Adjunto</dt><dd><a href="{{ brief.adjunto.url }}" class="strong" target="_blank">Ver archivo</a></dd>{% endif %}
+    </dl>
+  </div>
+  <div class="card card-pad">
+    <div class="section-title">Historia</div><p style="white-space:pre-wrap">{{ brief.historia|default:"—" }}</p>
+    <div class="section-title mt-3">Objetivos</div><p style="white-space:pre-wrap">{{ brief.objetivos|default:"—" }}</p>
+    <div class="section-title mt-3">Público objetivo</div><p style="white-space:pre-wrap">{{ brief.publico_objetivo|default:"—" }}</p>
+    <div class="section-title mt-3">Competencia</div><p style="white-space:pre-wrap">{{ brief.competencia|default:"—" }}</p>
+    <div class="section-title mt-3">Referencias</div><p style="white-space:pre-wrap">{{ brief.referencias|default:"—" }}</p>
+  </div>
+</div>
+{% endblock %}

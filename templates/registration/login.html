@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar · {{ BRAND_NAME }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<div class="auth-wrap">
+  <form class="auth-card" method="post">
+    {% csrf_token %}
+    <div class="brand">
+      <span class="mark">cb</span>
+      <span class="name" style="color:var(--ink)">{{ BRAND_SHORT }}<small>{{ BRAND_TAGLINE }}</small></span>
+    </div>
+    {% if form.errors %}
+      <div class="toast danger" style="margin-bottom:14px">Usuario o contraseña incorrectos.</div>
+    {% endif %}
+    <div class="form-row" style="margin-bottom:14px">
+      <label>Usuario</label>
+      <input class="form-control" type="text" name="username" autofocus required>
+    </div>
+    <div class="form-row" style="margin-bottom:18px">
+      <label>Contraseña</label>
+      <input class="form-control" type="password" name="password" required>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" type="submit">Ingresar</button>
+    <input type="hidden" name="next" value="{{ next }}">
+    <p class="helptext" style="text-align:center;margin-top:16px">Creative Operations System para estudios creativos.</p>
+  </form>
+</div>
+</body>
+</html>

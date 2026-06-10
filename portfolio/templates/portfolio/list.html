@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Portafolio · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}Portafolio · Casos de éxito{% endblock %}
+{% block content %}
+<div class="grid grid-3">
+  {% for caso in casos %}
+  <a href="{{ caso.get_absolute_url }}" class="card card-pad">
+    <div class="flex-between" style="margin-bottom:8px">
+      <span class="badge {% if caso.publicado %}success{% else %}secondary{% endif %}">{% if caso.publicado %}publicado{% else %}borrador{% endif %}</span>
+      <span class="badge dark">{{ caso.proyecto.get_tipo_display }}</span>
+    </div>
+    <h3>{{ caso.titulo }}</h3>
+    <p class="muted" style="font-size:13px">{{ caso.descripcion|truncatewords:18|default:"Sin descripción aún." }}</p>
+    <span class="chip-link mt-2">{{ caso.proyecto.cliente.nombre }}</span>
+  </a>
+  {% empty %}
+  <div class="card card-pad" style="grid-column:1/-1">
+    <div class="empty">{% include 'core/_icon.html' with name='star' %}<div>Aún no hay casos de éxito. Genera uno desde cualquier proyecto entregado.</div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

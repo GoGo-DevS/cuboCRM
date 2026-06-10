@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ proyecto.nombre }} · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}{{ proyecto.nombre }}{% endblock %}
+{% block breadcrumb %}{{ proyecto.cliente.nombre }} · <span class="badge {{ proyecto.color_estado }}">{{ proyecto.get_estado_display }}</span>{% endblock %}
+{% block actions %}
+  <a href="{% url 'projects:board' %}" class="btn btn-ghost">{% include 'core/_icon.html' with name='arrow-left' %} Volver</a>
+  <a href="{% url 'projects:update' proyecto.pk %}" class="btn">{% include 'core/_icon.html' with name='edit' %} Editar</a>
+  {% if tiene_caso %}
+    <a href="{{ proyecto.caso_estudio.get_absolute_url }}" class="btn btn-dark">{% include 'core/_icon.html' with name='star' %} Ver caso</a>
+  {% else %}
+    <form method="post" action="{% url 'portfolio:from_project' proyecto.pk %}" style="display:inline">{% csrf_token %}
+      <button class="btn btn-dark">{% include 'core/_icon.html' with name='star' %} Generar caso de éxito</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+  <div>
+    <!-- Entregables -->
+    <div class="card card-pad">
+      <div class="flex-between" style="margin-bottom:12px">
+        <div class="section-title mb-0">Entregables</div>
+      </div>
+      {% for e in entregables %}
+        <div class="flex-between" style="padding:11px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <span class="strong">{{ e.nombre }}</span>
+            <div class="muted" style="font-size:12px">{{ e.get_tipo_display }}{% if e.fecha %} · {{ e.fecha|date:"d M Y" }}{% endif %}{% if e.archivo %} · <a href="{{ e.archivo.url }}" target="_blank">archivo</a>{% endif %}</div>
+          </div>
+          <div class="flex">
+            <form method="post" action="{% url 'projects:deliverable_set_estado' e.pk %}">{% csrf_token %}
+              <select name="estado" class="form-select btn-sm" onchange="this.form.submit()" style="width:auto">
+                {% for val, lab in e.Estado.choices %}<option value="{{ val }}" {% if val == e.estado %}selected{% endif %}>{{ lab }}</option>{% endfor %}
+              </select>
+            </form>
+            <a href="{% url 'projects:revision_create' e.pk %}" class="btn btn-sm btn-ghost">+ rev ({{ e.revisiones.count }})</a>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Sin entregables aún.</p>
+      {% endfor %}
+
+      <details style="margin-top:14px">
+        <summary class="btn btn-sm" style="display:inline-flex">+ Agregar entregable</summary>
+        <form method="post" action="{% url 'projects:deliverable_create' proyecto.pk %}" enctype="multipart/form-data" class="mt-3">
+          {% csrf_token %}
+          {% include 'core/_form_fields.html' with form=deliverable_form %}
+          <button class="btn btn-primary mt-2">{% include 'core/_icon.html' with name='check' %} Agregar</button>
+        </form>
+      </details>
+    </div>
+
+    {% if proyecto.descripcion %}
+    <div class="card card-pad mt-3">
+      <div class="section-title">Descripción</div>
+      <p style="white-space:pre-wrap" class="mb-0">{{ proyecto.descripcion }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <!-- Estado + datos -->
+    <div class="card card-pad">
+      <div class="section-title">Estado del proyecto</div>
+      <form method="post" action="{% url 'projects:set_estado' proyecto.pk %}">{% csrf_token %}
+        <select name="estado" class="form-select" onchange="this.form.submit()">
+          {% for val, lab in proyecto.Estado.choices %}<option value="{{ val }}" {% if val == proyecto.estado %}selected{% endif %}>{{ lab }}</option>{% endfor %}
+        </select>
+      </form>
+      <dl class="dl mt-3">
+        <dt>Servicio</dt><dd>{{ proyecto.get_tipo_display }}</dd>
+        <dt>Inicio</dt><dd>{{ proyecto.fecha_inicio|date:"d M Y"|default:"—" }}</dd>
+        <dt>Entrega</dt><dd>{{ proyecto.fecha_entrega|date:"d M Y"|default:"—" }}</dd>
+        {% if proyecto.brief %}<dt>Brief</dt><dd><a href="{{ proyecto.brief.get_absolute_url }}" class="strong">{{ proyecto.brief.nombre_marca }}</a></dd>{% endif %}
+        {% if proyecto.responsable %}<dt>Responsable</dt><dd>{{ proyecto.responsable.get_username }}</dd>{% endif %}
+      </dl>
+    </div>
+
+    <!-- Finanzas -->
+    <div class="card card-pad mt-3">
+      <div class="section-title">Finanzas</div>
+      <dl class="dl">
+        <dt>Monto</dt><dd>${{ proyecto.monto|intcomma }}</dd>
+        <dt>Pagado</dt><dd>${{ proyecto.total_pagado|intcomma }}</dd>
+        <dt>Saldo</dt><dd><strong>${{ proyecto.saldo_pendiente|intcomma }}</strong></dd>
+      </dl>
+      <div class="bar-track mt-2"><span class="bar-fill" style="width:{{ proyecto.pct_pagado }}%"></span></div>
+      <div class="muted" style="font-size:12px;margin-top:4px">{{ proyecto.pct_pagado }}% cobrado</div>
+
+      {% for pago in pagos %}
+        <div class="flex-between" style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span>{{ pago.get_tipo_display }} · {{ pago.fecha|date:"d M"|default:"s/f" }}</span>
+          <span>
+            ${{ pago.monto|intcomma }}
+            <form method="post" action="{% url 'finance:payment_toggle' pago.pk %}" style="display:inline">{% csrf_token %}
+              <button class="badge {% if pago.pagado %}success{% else %}warning{% endif %}" style="border:0;cursor:pointer">{% if pago.pagado %}pagado{% else %}pendiente{% endif %}</button>
+            </form>
+          </span>
+        </div>
+      {% endfor %}
+
+      <details style="margin-top:12px">
+        <summary class="btn btn-sm" style="display:inline-flex">+ Registrar pago</summary>
+        <form method="post" action="{% url 'finance:payment_create' %}" class="mt-3">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ proyecto.get_absolute_url }}">
+          <input type="hidden" name="proyecto" value="{{ proyecto.pk }}">
+          <div class="form-row"><label>Tipo</label>
+            <select name="tipo" class="form-select">{% for v,l in pagos.model.Tipo.choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+          </div>
+          <div class="form-row mt-2"><label>Monto</label><input type="number" name="monto" class="form-control" value="0"></div>
+          <div class="form-row mt-2"><label>Fecha</label><input type="date" name="fecha" class="form-control"></div>
+          <div class="form-row mt-2"><label>Método</label>
+            <select name="metodo" class="form-select">{% for v,l in pagos.model.Metodo.choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+          </div>
+          <label class="flex mt-2" style="font-size:13px"><input type="checkbox" name="pagado" class="form-check-input"> Marcado como pagado</label>
+          <button class="btn btn-primary mt-2" style="width:100%;justify-content:center">Registrar</button>
+        </form>
+      </details>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Leads · {{ BRAND_NAME }}{% endblock %}
+{% block page_title %}Leads{% endblock %}
+{% block breadcrumb %}{{ total }} en pipeline · arrastra para mover{% endblock %}
+{% block actions %}
+  <form method="get" style="display:inline">
+    <select name="fuente" class="form-select btn-sm" onchange="this.form.submit()" style="width:auto">
+      <option value="">Todas las fuentes</option>
+      {% for val, lab in fuentes %}
+        <option value="{{ val }}" {% if val == fuente_sel %}selected{% endif %}>{{ lab }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  <a href="{% url 'leads:create' %}" class="btn btn-primary">{% include 'core/_icon.html' with name='plus' %} Nuevo lead</a>
+{% endblock %}
+
+{% block content %}
+<div class="kanban" id="leadsKanban">
+  {% for col in columnas %}
+  <div class="kcol" data-estado="{{ col.key }}">
+    <div class="khead">
+      <span class="t">{{ col.label }}</span>
+      <span class="count">{{ col.total }}</span>
+      {% if col.valor %}<span class="val">${{ col.valor|intcomma }}</span>{% endif %}
+    </div>
+    <div class="kbody">
+      {% for l in col.leads %}
+      <div class="kcard" draggable="true" data-id="{{ l.pk }}" onclick="if(!window.__drag)location.href='{{ l.get_absolute_url }}'">
+        <div class="title">{{ l.nombre }}</div>
+        <div class="meta">
+          {% if l.empresa %}<span>{{ l.empresa }}</span>{% endif %}
+          <span class="badge secondary">{{ l.get_fuente_display }}</span>
+        </div>
+        {% if l.valor_estimado %}<div class="meta mt-2">💰 ${{ l.valor_estimado|intcomma }}</div>{% endif %}
+      </div>
+      {% empty %}
+      <p class="muted" style="font-size:12px;padding:6px 8px">—</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  initKanban('leadsKanban', "{% url 'leads:set_estado' 0 %}");
+  // evita navegar al soltar
+  document.querySelectorAll('#leadsKanban .kcard').forEach(c => {
+    c.addEventListener('dragstart', () => window.__drag = true);
+    c.addEventListener('dragend', () => setTimeout(() => window.__drag = false, 50));
+  });
+</script>
+{% endblock %}
